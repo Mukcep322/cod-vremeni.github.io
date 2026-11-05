@@ -41,6 +41,6 @@ export function normalizeAnswer(s: string): string {
   return s
     .toLowerCase()
     .replace(/ё/g, "е")
-    .replace(/[\s.,!?;:«»"'()-]+/g, "")
+    .replace(/[\s.,!?;:«»"'()№–—-]+/g, "")
     .trim();
 }

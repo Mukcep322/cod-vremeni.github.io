@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { STOPS } from "../data/stops";
+import { dataClass, isNoData, STOPS } from "../data/stops";
 import { normalizeAnswer } from "../lib/geo";
 import { useProgress } from "../state/progress";
 import { CompareSlider } from "../components/CompareSlider";
 import { AudioPlayer } from "../components/AudioPlayer";
-import { Chip, StatusSpacer, TopBar } from "../components/ui";
+import { Button, Chip, Header } from "../components/ui";
+import iconArchive from "../assets/icon-archive.svg";
+import iconCompass from "../assets/icon-compass.svg";
+import iconKeyhole from "../assets/icon-keyhole.svg";
+import iconPin from "../assets/icon-pin.svg";
+import iconQuestion from "../assets/icon-question.svg";
 
 const MAX_ATTEMPTS = 3;
 
@@ -44,6 +49,8 @@ export function Stop() {
   const isDone = progress.done.includes(stop.id);
   const attempts = progress.attempts[stop.id] ?? 0;
   const isLast = index === STOPS.length - 1;
+  const closed = !isDone && !allViewed;
+  const unseen = stop.stories.find((s) => !viewed.includes(s.id));
 
   const complete = () => {
     dispatch({ type: "complete", stopId: stop.id });
@@ -53,7 +60,10 @@ export function Stop() {
   const check = (e: FormEvent) => {
     e.preventDefault();
     if (!answer.trim()) return;
-    const ok = stop.task.answers.some((a) => normalizeAnswer(a) === normalizeAnswer(answer));
+    const given = normalizeAnswer(answer);
+    const ok =
+      stop.task.answers.some((a) => normalizeAnswer(a) === given) ||
+      (!!stop.task.mustContain?.length && stop.task.mustContain.every((part) => given.includes(normalizeAnswer(part))));
     if (ok) {
       complete();
     } else {
@@ -64,11 +74,10 @@ export function Stop() {
 
   return (
     <div className="screen screen--page">
-      <StatusSpacer />
-      <TopBar right={`${index + 1} из ${STOPS.length}`} />
+      <Header number={index + 1} back />
 
-      <div className="page">
-        {multi && (
+      {multi && (
+        <div className="tabs-wrap">
           <div className="tabs" role="tablist">
             {stop.stories.map((s) => (
               <button
@@ -83,54 +92,94 @@ export function Stop() {
               </button>
             ))}
           </div>
-        )}
+        </div>
+      )}
 
-        <CompareSlider then={story.then} now={story.now} alt={story.title} />
+      <CompareSlider
+        then={story.then}
+        now={story.now}
+        alt={story.title}
+        year={story.period.match(/\d{4}/)?.[0] ?? ""}
+      />
 
-        <div className="stack">
-          <Chip>{story.period}</Chip>
-          <h1 className="title-l">{story.title}</h1>
-          <div className="muted small">{story.address}</div>
+      <div className="page">
+        <div className="meta">
+          <Chip>Виток II · {story.period}</Chip>
+          <span className="meta__text">
+            № {index + 1} / {STOPS.length}
+          </span>
+        </div>
+        <h1 className="title-l">{story.title}</h1>
+        <div className="address">
+          <img src={iconPin} width={20} height={20} alt="" />
+          <span>{story.address}</span>
         </div>
 
         <AudioPlayer src={story.audio} title="Слушать легенду" duration={story.audioDuration} />
 
-        <p className="body">{story.text}</p>
+        {isNoData(story.legend) ? (
+          <p className="missing">{story.legend}</p>
+        ) : (
+          story.legend && (
+            <details className="legend">
+              <summary>
+                ТЕКСТ АУДИОЛЕГЕНДЫ
+                <span className="legend__sign" aria-hidden />
+              </summary>
+              <p className="text-small">{story.legend}</p>
+            </details>
+          )
+        )}
 
-        {multi && !allViewed && (
-          <div className="note">
-            Вторая история — в сквере в 100 м. Переключите вкладку, когда дойдёте: у неё своя аудиолегенда.
+        <p className={dataClass(story.text, "body")}>{story.text}</p>
+
+        {multi && !allViewed && unseen && (
+          <div className="info">
+            <img src={iconCompass} width={24} height={24} alt="" />
+            <p className="text-small">
+              Вторая история — в Ленинском сквере, в 100 м. Откройте вкладку «{unseen.tab}», когда дойдёте.
+            </p>
           </div>
         )}
 
         {multi && allViewed && !isDone && (
-          <button
-            type="button"
-            className="btn btn--secondary"
+          <Button
+            variant="secondary"
+            down
             onClick={() => taskRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
           >
-            К заданию ↓
-          </button>
+            К заданию
+          </Button>
         )}
 
-        <div className="task" ref={taskRef}>
-          <div className="eyebrow">Задание</div>
+        <div className={`task ${closed ? "task--closed" : ""}`} ref={taskRef}>
+          <div className="task__head">
+            <img src={closed ? iconKeyhole : iconQuestion} width={24} height={24} alt="" />
+            <span className="label">{closed ? "Задание закрыто" : "Задание"}</span>
+          </div>
           {isDone ? (
             <>
               <p className="task__q">Задание выполнено ✓</p>
-              <button
-                type="button"
-                className="btn btn--primary"
-                onClick={() => navigate(isLast ? "/finish" : "/walk")}
-              >
+              <Button onClick={() => navigate(isLast ? "/finish" : "/walk")}>
                 {isLast ? "К итогу" : "К следующей точке"}
-              </button>
+              </Button>
             </>
-          ) : !allViewed ? (
-            <p className="muted">Откройте обе вкладки, чтобы перейти к заданию.</p>
+          ) : closed ? (
+            <p className="text-small">Откройте обе истории остановки, чтобы перейти к заданию.</p>
+          ) : attempts >= MAX_ATTEMPTS ? (
+            <>
+              <p className={dataClass(stop.task.question, "task__q")}>{stop.task.question}</p>
+              <div className="answer-box">
+                <div className="label-xs">Правильный ответ · после {MAX_ATTEMPTS} попыток</div>
+                <div className="answer-box__text">{stop.task.answers[0]}</div>
+              </div>
+              <Button variant="secondary" onClick={complete}>
+                Идти дальше
+              </Button>
+            </>
           ) : (
             <form onSubmit={check} className="stack">
-              <label htmlFor="answer" className="task__q">
+              <label htmlFor="answer" className={dataClass(stop.task.question, "task__q")}>
                 {stop.task.question}
               </label>
               <input
@@ -146,29 +195,30 @@ export function Stop() {
                 enterKeyHint="done"
               />
               {wrong && <div className="error">Не совсем. Попробуйте ещё раз.</div>}
-              {(hintOpen || attempts > 0) && <div className="note">{stop.task.hint}</div>}
-              <button type="submit" className="btn btn--primary" disabled={!answer.trim()}>
+              {(hintOpen || attempts > 0) &&
+                (isNoData(stop.task.hint) ? (
+                  <div className="missing">{stop.task.hint}</div>
+                ) : (
+                  <div className="hint-box">
+                    <div className="label-xs">Подсказка</div>
+                    <div className="text-small">{stop.task.hint}</div>
+                  </div>
+                ))}
+              <Button type="submit" disabled={!answer.trim()}>
                 Проверить
-              </button>
+              </Button>
               {attempts === 0 && !hintOpen && (
                 <button type="button" className="link" onClick={() => setHintOpen(true)}>
                   Подсказка
                 </button>
-              )}
-              {attempts >= MAX_ATTEMPTS && (
-                <div className="reveal">
-                  <div className="muted small">Правильный ответ: {stop.task.answers[0]}</div>
-                  <button type="button" className="btn btn--secondary" onClick={complete}>
-                    Идти дальше
-                  </button>
-                </div>
               )}
             </form>
           )}
         </div>
 
         <a className="source" href={stop.source.url} target="_blank" rel="noopener noreferrer">
-          Источник: {stop.source.label} ↗
+          <img src={iconArchive} width={18} height={18} alt="" />
+          <span>Источник: {stop.source.label} ↗</span>
         </a>
       </div>
     </div>

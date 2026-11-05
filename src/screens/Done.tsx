@@ -1,7 +1,8 @@
 import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { STOPS } from "../data/stops";
+import { dataClass, isNoData, STOPS, stopCoords } from "../data/stops";
+import { distanceM, formatDistance, walkMinutes } from "../lib/geo";
 import { useProgress } from "../state/progress";
-import { Segments, StatusSpacer, TopBar } from "../components/ui";
+import { Button, Chip, Segments } from "../components/ui";
 
 export function Done() {
   const { id } = useParams();
@@ -12,36 +13,51 @@ export function Done() {
   if (!stop) return <Navigate to="/walk" replace />;
   const index = STOPS.indexOf(stop);
   const isLast = index === STOPS.length - 1;
+  const next = STOPS[index + 1];
+  const toNext = next ? distanceM(stopCoords(stop), stopCoords(next)) : 0;
+
+  const { answers, question, reward } = stop.task;
+  const answer = isNoData(question) ? "" : answers[0];
+  const showReward = reward !== answer;
 
   return (
-    <div className="screen screen--page">
-      <StatusSpacer />
-      <TopBar right={`${index + 1} из ${STOPS.length}`} />
-      <div className="page page--fill">
-        <svg className="check" width="72" height="72" viewBox="0 0 72 72" aria-hidden>
-          <circle cx="36" cy="36" r="34" />
-          <path d="M22 37 32 47 51 27" />
-        </svg>
-        <h1 className="title-xl">Верно!</h1>
-        <p className="body">{stop.task.reward}</p>
-        <div className="stack stack--tight">
-          <div className="small strong">
-            Пройдено {progress.done.length} из {STOPS.length} остановок
-          </div>
-          <Segments done={progress.done.length} />
-        </div>
-        <div className="grow" />
-        <button
-          type="button"
-          className="btn btn--primary"
-          onClick={() => navigate(isLast || progress.finishedAt ? "/finish" : "/walk")}
-        >
-          {isLast ? "К итогу маршрута" : "К следующей точке"}
-        </button>
-        <button type="button" className="btn btn--secondary" onClick={() => navigate(`/stop/${stop.id}`)}>
-          Остаться на этой точке
-        </button>
+    <div className="screen screen--done">
+      <Chip mineral>Верно ✓</Chip>
+      <h1 className="hero">
+        Ответ
+        <br />
+        принят!
+      </h1>
+      <div className="mineral-text">
+        Остановка {index + 1} из {STOPS.length} пройдена
       </div>
+      <Segments done={progress.done.length} />
+
+      <div className="answer-card">
+        <div className="label">Ответ</div>
+        {answer && <p className="answer-card__title">{answer}</p>}
+        {answer && showReward && <div className="answer-card__rule" />}
+        {showReward && <p className={dataClass(reward, "text-small")}>{reward}</p>}
+      </div>
+
+      {next && !progress.finishedAt && (
+        <div className="next-box">
+          <div className="mineral-text">
+            Далее · {formatDistance(toNext)} · ≈ {walkMinutes(toNext)} мин
+          </div>
+          <div className="next-box__title">
+            {next.id} · {next.title}
+          </div>
+        </div>
+      )}
+
+      <div className="grow" />
+      <Button variant="accent" onClick={() => navigate(isLast || progress.finishedAt ? "/finish" : "/walk")}>
+        {isLast ? "К итогу маршрута" : "К следующей точке"}
+      </Button>
+      <Button variant="secondary" onClick={() => navigate(`/stop/${stop.id}`)}>
+        Остаться на точке
+      </Button>
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { ARRIVAL_RADIUS_M, distanceM, formatDistance, walkMinutes, yandexWalkUrl
 import { useGeolocation } from "../hooks/useGeolocation";
 import { useProgress } from "../state/progress";
 import { RouteMap } from "../components/RouteMap";
-import { Chip, Segments } from "../components/ui";
+import { Button, Chip, Header } from "../components/ui";
 
 // Остановки, на которые уже открывали экран автоматически в этой сессии,
 // чтобы «← Карта» не возвращала участника обратно на точку.
@@ -39,43 +39,41 @@ export function Walk() {
   if (!target || !targetCoords) return <Navigate to="/finish" replace />;
 
   const arrived = pos !== null && distance !== null && distance <= ARRIVAL_RADIUS_M;
+  const status = error
+    ? `${error}. Нажмите «Я на месте», когда дойдёте.`
+    : pos
+      ? `сработает сама в ${ARRIVAL_RADIUS_M} м`
+      : "определяем ваше местоположение…";
 
   return (
     <div className="screen screen--map">
-      <RouteMap me={pos} targetIndex={index} done={progress.done} focus="target" sheetShare={0.42} />
-
-      <div className="float-progress">
-        <div className="float-progress__label">
-          Остановка {index + 1} из {STOPS.length}
-        </div>
-        <Segments done={progress.done.length} current={index} />
+      <Header number={index + 1} />
+      <div className="map-area">
+        <RouteMap me={pos} targetIndex={index} done={progress.done} focus="target" />
       </div>
 
-      <section className="sheet sheet--walk">
+      <section className="sheet">
         <span className="sheet__handle" aria-hidden />
-        <div className="eyebrow">{arrived ? "Вы на месте" : "Следующая остановка"}</div>
-        <h2 className="title-l">
+        <div className="meta">
+          <Chip>Виток II · {target.stories[0].period}</Chip>
+          <span className="meta__text">
+            {arrived
+              ? "Вы на месте"
+              : distance !== null
+                ? `${formatDistance(distance)} · ≈ ${walkMinutes(distance)} мин`
+                : "Следующая остановка"}
+          </span>
+        </div>
+        <h2 className="title-sheet">
           {target.id} · {target.title}
         </h2>
-        <div className="chips">
-          <Chip>{target.stories[0].address}</Chip>
-          {distance !== null && <Chip>{formatDistance(distance)}</Chip>}
-          {distance !== null && <Chip>≈ {walkMinutes(distance)} мин</Chip>}
-        </div>
-        <p className="hint">
-          {error
-            ? `${error}. Нажмите «Я на месте», когда дойдёте.`
-            : pos
-              ? `Отметка «на месте» сработает сама в ${ARRIVAL_RADIUS_M} м от точки`
-              : "Определяем ваше местоположение…"}
+        <p className="text-small">
+          {target.stories[0].address} · {status}
         </p>
-        <div className="grow" />
-        <a className="btn btn--secondary" href={yandexWalkUrl(targetCoords)} target="_blank" rel="noopener noreferrer">
-          Пешком в Яндекс.Картах ↗
-        </a>
-        <button type="button" className="btn btn--primary" onClick={() => navigate(`/stop/${target.id}`)}>
-          Я на месте
-        </button>
+        <Button onClick={() => navigate(`/stop/${target.id}`)}>Я на месте</Button>
+        <Button variant="secondary" href={yandexWalkUrl(targetCoords)}>
+          В Яндекс.Картах
+        </Button>
       </section>
     </div>
   );

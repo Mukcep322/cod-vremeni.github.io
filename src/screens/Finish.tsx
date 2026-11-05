@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { FINAL_FACT, STOPS } from "../data/stops";
+import { dataClass, FINAL_FACT, STOPS } from "../data/stops";
 import { ROUTE_KM } from "../lib/geo";
 import { useProgress } from "../state/progress";
-import { Chip, StatusSpacer } from "../components/ui";
+import { Button, Chip } from "../components/ui";
+import iconStar from "../assets/icon-star.svg";
 
 // Фото для шапки финала. Положите файл в public/photos/ и впишите путь.
 const FINAL_PHOTO = "";
@@ -39,82 +40,87 @@ export function Finish() {
   };
 
   return (
-    <div className="screen screen--page">
-      <StatusSpacer />
-      <div className="page">
-        {FINAL_PHOTO ? (
-          <img className="hero" src={FINAL_PHOTO} alt="Площадь Героев, Вечный огонь" />
-        ) : (
-          <div className="hero picture--empty" role="img" aria-label="Фото будет добавлено">
-            <span>Фото площади Героев появится здесь</span>
-          </div>
-        )}
-        <div className="stack">
-          <Chip dark>Маршрут пройден</Chip>
-          <h1 className="title-l">Улицы в военное время</h1>
+    <div className="screen screen--finish">
+      <Chip mineral>Маршрут пройден ✓</Chip>
+      <h1 className="hero">
+        Маршрут
+        <br />
+        пройден
+      </h1>
+      <div className="mineral-text">Площадь Героев · Вечный огонь</div>
+
+      {FINAL_PHOTO ? (
+        <img className="final-photo" src={FINAL_PHOTO} alt="Площадь Героев, Вечный огонь" />
+      ) : (
+        <div className="final-photo final-photo--empty" role="img" aria-label="Фото будет добавлено">
+          <span className="final-photo__tag">ФОТО · ЗАГЛУШКА</span>
         </div>
-        <div className="stats">
-          <div className="stat">
-            <b>
-              {progress.done.length}/{STOPS.length}
-            </b>
-            <span>остановок</span>
-          </div>
-          <div className="stat">
-            <b>{ROUTE_KM.toFixed(1).replace(".", ",")}</b>
-            <span>км</span>
-          </div>
-          <div className="stat">
-            <b>{duration(progress.finishedAt - progress.startedAt)}</b>
-            <span>в пути</span>
-          </div>
+      )}
+
+      <div className="stats">
+        <div className="stat">
+          <b>
+            {progress.done.length}/{STOPS.length}
+          </b>
+          <span>остановок</span>
         </div>
-
-        <div className="task">
-          <label htmlFor="name" className="task__q">
-            Найдите на плитах у Вечного огня одно имя и запишите его
-          </label>
-          <input
-            id="name"
-            className="input"
-            value={progress.name}
-            onChange={(e) => dispatch({ type: "setName", name: e.target.value })}
-            placeholder="Фамилия, имя"
-            autoComplete="off"
-          />
-          {progress.name.trim() && <div className="muted small">Сохранено только на этом телефоне</div>}
+        <div className="stat">
+          <b>{ROUTE_KM.toFixed(1).replace(".", ",")} км</b>
+          <span>пешком</span>
         </div>
-
-        <p className="body muted">{FINAL_FACT}</p>
-
-        <details className="sources">
-          <summary>Источники маршрута</summary>
-          <ul>
-            {sources.map((s) => (
-              <li key={s.url}>
-                <a href={s.url} target="_blank" rel="noopener noreferrer">
-                  {s.label} ↗
-                </a>
-              </li>
-            ))}
-          </ul>
-        </details>
-
-        <button type="button" className="btn btn--primary" onClick={share}>
-          Поделиться маршрутом
-        </button>
-        {shareNote && <div className="muted small center">{shareNote}</div>}
-        <button
-          type="button"
-          className="btn btn--secondary"
-          onClick={() => {
-            dispatch({ type: "reset" });
-            navigate("/");
-          }}
-        >
-          Пройти заново
-        </button>
+        <div className="stat">
+          <b>{duration(progress.finishedAt - progress.startedAt)}</b>
+          <span>в пути</span>
+        </div>
       </div>
+
+      <div className="name-card">
+        <div className="task__head">
+          <img src={iconStar} width={22} height={22} alt="" />
+          <span className="label">У Вечного огня</span>
+        </div>
+        <label htmlFor="name" className="task__q">
+          Найдите на плитах одно имя и запишите его
+        </label>
+        <input
+          id="name"
+          className="input"
+          value={progress.name}
+          onChange={(e) => dispatch({ type: "setName", name: e.target.value })}
+          placeholder="Фамилия, имя"
+          autoComplete="off"
+        />
+        <div className="name-card__note">Сохраняется только на этом телефоне</div>
+      </div>
+
+      <p className={dataClass(FINAL_FACT, "body")}>{FINAL_FACT}</p>
+
+      <div className="sources">
+        <div className="sources__title">Источники</div>
+        <ul>
+          {sources.map((s) => (
+            <li key={s.url}>
+              <a href={s.url} target="_blank" rel="noopener noreferrer">
+                {s.label} ↗
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <Button variant="accent" onClick={share}>
+        Поделиться
+      </Button>
+      {shareNote && <div className="small center">{shareNote}</div>}
+      <Button
+        variant="secondary"
+        onClick={() => {
+          dispatch({ type: "reset" });
+          navigate("/");
+        }}
+      >
+        Пройти заново
+      </Button>
     </div>
   );
 }

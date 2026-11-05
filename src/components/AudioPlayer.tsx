@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import playIcon from "../assets/audio-play.svg";
+import emptyIcon from "../assets/audio-empty.svg";
 
 type Props = { src: string; title: string; duration: string };
 
@@ -47,32 +49,33 @@ export function AudioPlayer({ src, title, duration }: Props) {
         aria-label={playing ? "Пауза" : "Слушать легенду"}
       >
         {playing ? (
-          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden>
-            <rect x="3" y="2" width="3.5" height="12" rx="1" />
-            <rect x="9.5" y="2" width="3.5" height="12" rx="1" />
-          </svg>
+          <span className="audio__pause" aria-hidden>
+            <i />
+            <i />
+          </span>
         ) : (
-          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden>
-            <path d="M4 2.5 13.5 8 4 13.5Z" />
-          </svg>
+          <img src={disabled ? emptyIcon : playIcon} width={48} height={48} alt="" />
         )}
       </button>
       <div className="audio__body">
         <div className="audio__title">{label}</div>
-        <input
-          type="range"
-          className="audio__bar"
-          min={0}
-          max={total || 1}
-          step={0.1}
-          value={time}
-          disabled={disabled || !total}
-          onChange={(e) => {
-            const a = ref.current;
-            if (a) a.currentTime = Number(e.target.value);
-          }}
-          aria-label="Перемотка"
-        />
+        <div className="audio__track">
+          <span className="audio__fill" style={{ width: total ? `${(time / total) * 100}%` : 0 }} />
+          <input
+            type="range"
+            className="audio__bar"
+            min={0}
+            max={total || 1}
+            step={0.1}
+            value={time}
+            disabled={disabled || !total}
+            onChange={(e) => {
+              const a = ref.current;
+              if (a) a.currentTime = Number(e.target.value);
+            }}
+            aria-label="Перемотка"
+          />
+        </div>
         {!disabled && total > 0 && (
           <div className="audio__time">
             {fmt(time)} / {fmt(total)}

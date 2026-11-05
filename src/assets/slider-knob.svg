@@ -1,0 +1,12 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="45.8824" height="45.8333" viewBox="0 0 45.8824 45.8333" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="Slider knob">
+<use xlink:href="#stroke0_0_181" fill="#F2E9D6"/>
+<mask id="stroke1_0_181" fill="white">
+<use xlink:href="#stroke0_0_181"/>
+</mask>
+<path d="M45.8824 22.9167C45.8824 35.5732 35.6112 45.8333 22.9412 45.8333C10.2711 45.8333 0 35.5732 0 22.9167C0 10.2601 10.2711 0 22.9412 0C35.6112 0 45.8824 10.2601 45.8824 22.9167Z" stroke-width="6" stroke="#17130F" mask="url(#stroke1_0_181)"/>
+</g>
+<defs>
+<path id="stroke0_0_181" d="M45.8824 22.9167C45.8824 35.5732 35.6112 45.8333 22.9412 45.8333C10.2711 45.8333 0 35.5732 0 22.9167C0 10.2601 10.2711 0 22.9412 0C35.6112 0 45.8824 10.2601 45.8824 22.9167Z"/>
+</defs>
+</svg>

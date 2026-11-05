@@ -1,21 +1,25 @@
 import { useState } from "react";
+import knob from "../assets/slider-knob.svg";
 
-type Props = { then: string; now: string; alt: string };
+type Props = { then: string; now: string; alt: string; year: string };
 
-/** Шторка «тогда / сейчас». Пустой путь — серая заглушка. */
-export function CompareSlider({ then, now, alt }: Props) {
+/** Шторка «Было / Стало». Пустой путь — фирменная заглушка со штриховкой. */
+export function CompareSlider({ then, now, alt, year }: Props) {
   const [pos, setPos] = useState(50);
   return (
     <div className="compare">
-      <Picture src={then} alt={`${alt}: архивное фото`} label="Тогда" side="then" />
+      <Picture src={then} alt={`${alt}: архивное фото`} caption="Архивное фото" side="then" />
       <div className="compare__now" style={{ clipPath: `inset(0 0 0 ${pos}%)` }}>
-        <Picture src={now} alt={`${alt}: сейчас`} label="Сейчас" side="now" />
+        <Picture src={now} alt={`${alt}: сейчас`} caption="Фото сейчас" side="now" />
       </div>
       <div className="compare__divider" style={{ left: `${pos}%` }} aria-hidden>
-        <span className="compare__handle">‹ ›</span>
+        <div className="compare__handle">
+          <img src={knob} width={46} height={46} alt="" />
+          <span>⇆</span>
+        </div>
       </div>
-      <span className="compare__tag compare__tag--left">Тогда</span>
-      <span className="compare__tag compare__tag--right">Сейчас</span>
+      <span className="compare__tag compare__tag--left">Было{year ? ` · ${year}` : ""}</span>
+      <span className="compare__tag compare__tag--right">Стало · 2026</span>
       <input
         className="compare__range"
         type="range"
@@ -23,17 +27,21 @@ export function CompareSlider({ then, now, alt }: Props) {
         max={100}
         value={pos}
         onChange={(e) => setPos(Number(e.target.value))}
-        aria-label="Сравнить тогда и сейчас"
+        aria-label="Сравнить было и стало"
       />
     </div>
   );
 }
 
-function Picture({ src, alt, label, side }: { src: string; alt: string; label: string; side: "then" | "now" }) {
+function Picture({ src, alt, caption, side }: { src: string; alt: string; caption: string; side: "then" | "now" }) {
   if (!src) {
     return (
-      <div className={`picture picture--empty picture--${side}`} role="img" aria-label={`${label}: фото будет добавлено`}>
-        <span>Фото «{label.toLowerCase()}»</span>
+      <div className={`picture picture--${side}`} role="img" aria-label={`${caption}: будет добавлено`}>
+        <span className="picture__caption">
+          {caption}
+          <br />
+          заглушка
+        </span>
       </div>
     );
   }

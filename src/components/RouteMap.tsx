@@ -1,9 +1,10 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { STOPS, stopCoords } from "../data/stops";
 import { loadYMaps, YMAPS_KEY, type YMapsKit } from "../lib/ymaps";
 import type { Position } from "../hooks/useGeolocation";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { FallbackMap } from "./FallbackMap";
+import { MeMarker, Pin } from "./MapMarkers";
 import { markerState } from "../lib/markers";
 
 type Props = {
@@ -13,8 +14,6 @@ type Props = {
   done: number[];
   /** "route" — весь маршрут, "target" — приблизить к цели */
   focus: "route" | "target";
-  /** Сдвиг центра вниз, чтобы цель не пряталась под шторкой (доля высоты экрана) */
-  sheetShare?: number;
 };
 
 export function RouteMap(props: Props) {
@@ -46,24 +45,12 @@ export function RouteMap(props: Props) {
   return <FallbackMap {...props} note={status === "loading" ? "Загружаем карту…" : failedNote} />;
 }
 
+// Карта лежит в .map-area над шторкой: логотип, копирайты и кнопку «Открыть в Картах»
+// по условиям API перекрывать нельзя
 function YandexRouteMap({ kit, me, targetIndex, done, focus }: Props & { kit: YMapsKit }) {
   const { YMap, YMapDefaultSchemeLayer, YMapDefaultFeaturesLayer, YMapMarker, YMapFeature } = kit;
   const coords = STOPS.map(stopCoords);
   const line = coords.map(([lat, lon]) => [lon, lat]);
-
-  // Карта заканчивается над шторкой: по условиям API логотип, копирайты
-  // и кнопку «Открыть в Картах» нельзя перекрывать
-  const boxRef = useRef<HTMLDivElement>(null);
-  const [sheetHeight, setSheetHeight] = useState(0);
-  useLayoutEffect(() => {
-    const sheet = boxRef.current?.parentElement?.querySelector<HTMLElement>(".sheet");
-    if (!sheet) return;
-    const update = () => setSheetHeight(sheet.offsetHeight);
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(sheet);
-    return () => ro.disconnect();
-  }, []);
 
   const location = useMemo(() => {
     if (focus === "target" && targetIndex >= 0 && targetIndex < STOPS.length) {
@@ -79,24 +66,24 @@ function YandexRouteMap({ kit, me, targetIndex, done, focus }: Props & { kit: YM
   }, [focus, targetIndex]);
 
   return (
-    <div className="map-fill" ref={boxRef} style={{ bottom: sheetHeight }}>
+    <div className="map-fill">
       <YMap location={location} mode="vector">
         <YMapDefaultSchemeLayer />
         <YMapDefaultFeaturesLayer />
         <YMapFeature
           geometry={{ type: "LineString", coordinates: line }}
-          style={{ stroke: [{ color: "#232826", width: 3, dash: [8, 6] }] }}
+          style={{ stroke: [{ color: "#0A5C49", width: 4, dash: [8, 8] }] }}
         />
-        {STOPS.map((s, i) => (
-          <YMapMarker key={s.id} coordinates={[coords[i][1], coords[i][0]]}>
-            <div className={`marker marker--${markerState(i, targetIndex, done)}`}>{s.id}</div>
-          </YMapMarker>
-        ))}
         {me && (
           <YMapMarker coordinates={[me.lon, me.lat]}>
-            <div className="me" aria-label="Вы здесь" />
+            <MeMarker />
           </YMapMarker>
         )}
+        {STOPS.map((s, i) => (
+          <YMapMarker key={s.id} coordinates={[coords[i][1], coords[i][0]]}>
+            <Pin number={s.id} state={markerState(i, targetIndex, done)} />
+          </YMapMarker>
+        ))}
       </YMap>
     </div>
   );
