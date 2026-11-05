@@ -7,7 +7,17 @@
     <title>Улицы в военное время</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Виден, пока не запустился скрипт. Если остался на экране, сайт не загрузился -->
+      <p style="margin: 0; padding: 32px 16px; font: 16px/1.45 system-ui, sans-serif; text-align: center">
+        Загружаем маршрут… Если этот текст не исчезает, обновите страницу или проверьте интернет.
+      </p>
+      <noscript>
+        <p style="margin: 0; padding: 0 16px; font: 16px/1.45 system-ui, sans-serif; text-align: center">
+          Для маршрута нужен JavaScript. Включите его в настройках браузера.
+        </p>
+      </noscript>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

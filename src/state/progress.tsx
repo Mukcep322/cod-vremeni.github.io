@@ -24,7 +24,7 @@ type Action =
   | { type: "complete"; stopId: number }
   | { type: "setName"; name: string };
 
-const KEY = "ulitsy-progress-v1";
+export const PROGRESS_KEY = "ulitsy-progress-v1";
 
 const initial: Progress = {
   startedAt: null,
@@ -38,7 +38,7 @@ const initial: Progress = {
 
 function load(): Progress {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(PROGRESS_KEY);
     return raw ? { ...initial, ...JSON.parse(raw) } : initial;
   } catch {
     return initial;
@@ -80,7 +80,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   const [progress, dispatch] = useReducer(reducer, undefined, load);
   useEffect(() => {
     try {
-      localStorage.setItem(KEY, JSON.stringify(progress));
+      localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
     } catch {
       /* приватный режим браузера — прогресс просто не сохранится */
     }

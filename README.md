@@ -68,3 +68,7 @@ src/
 2. Settings → Pages → Source: **GitHub Actions**.
 3. Settings → Secrets and variables → Actions → New repository secret: `YMAPS_API_KEY` с вашим ключом.
 4. Каждый push в `main` собирает и публикует сайт (`.github/workflows/deploy.yml`).
+
+Адрес сайта: `https://<логин>.github.io/<репозиторий>/`.
+
+Если на сайте белый экран или текст «Загружаем маршрут…», откройте код страницы. Строка `<script type="module" src="/src/main.tsx">` значит, что Pages публикует исходники из ветки, а не сборку: проверьте пункт 2 и запустите workflow заново.
