@@ -1,22 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
 import { STOPS, stopCoords } from "../data/stops";
 import { loadYMaps, YMAPS_KEY, type YMapsKit } from "../lib/ymaps";
-import type { Position } from "../hooks/useGeolocation";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { FallbackMap } from "./FallbackMap";
 import { MeMarker, Pin } from "./MapMarkers";
-import { markerState } from "../lib/markers";
+import { markerState, type MapProps } from "../lib/markers";
 
-type Props = {
-  me?: Position | null;
-  /** Индекс остановки, к которой идёт участник; -1 — показать весь маршрут без цели */
-  targetIndex: number;
-  done: number[];
-  /** "route" — весь маршрут, "target" — приблизить к цели */
-  focus: "route" | "target";
-};
+// Координаты в порядке Яндекса: [долгота, широта]
+const COORDS = STOPS.map((stop) => {
+  const [lat, lon] = stopCoords(stop);
+  return [lon, lat];
+});
 
-export function RouteMap(props: Props) {
+/** Вид на весь маршрут: центр охватывающего прямоугольника */
+function routeCenter() {
+  const lons = COORDS.map((c) => c[0]);
+  const lats = COORDS.map((c) => c[1]);
+  return [(Math.min(...lons) + Math.max(...lons)) / 2, (Math.min(...lats) + Math.max(...lats)) / 2];
+}
+
+export function RouteMap(props: MapProps) {
   const [kit, setKit] = useState<YMapsKit | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "fallback">(YMAPS_KEY ? "loading" : "fallback");
 
@@ -33,7 +36,8 @@ export function RouteMap(props: Props) {
     };
   }, []);
 
-  const failedNote = YMAPS_KEY ? "Схема маршрута · карта не загрузилась" : "Схема маршрута · добавьте ключ Яндекс Карт";
+  const noKeyNote = import.meta.env.DEV ? "Схема маршрута · добавьте ключ Яндекс Карт" : "Схема маршрута";
+  const failedNote = YMAPS_KEY ? "Схема маршрута · карта не загрузилась" : noKeyNote;
 
   if (status === "ready" && kit) {
     return (
@@ -47,22 +51,14 @@ export function RouteMap(props: Props) {
 
 // Карта лежит в .map-area над шторкой: логотип, копирайты и кнопку «Открыть в Картах»
 // по условиям API перекрывать нельзя
-function YandexRouteMap({ kit, me, targetIndex, done, focus }: Props & { kit: YMapsKit }) {
+function YandexRouteMap({ kit, me, targetIndex, done, focus }: MapProps & { kit: YMapsKit }) {
   const { YMap, YMapDefaultSchemeLayer, YMapDefaultFeaturesLayer, YMapMarker, YMapFeature } = kit;
-  const coords = STOPS.map(stopCoords);
-  const line = coords.map(([lat, lon]) => [lon, lat]);
 
   const location = useMemo(() => {
-    if (focus === "target" && targetIndex >= 0 && targetIndex < STOPS.length) {
-      const [lat, lon] = coords[targetIndex];
-      return { center: [lon, lat], zoom: 16, duration: 400 };
-    }
-    const lats = coords.map((c) => c[0]);
-    const lons = coords.map((c) => c[1]);
-    const cLat = (Math.min(...lats) + Math.max(...lats)) / 2;
-    const cLon = (Math.min(...lons) + Math.max(...lons)) / 2;
-    return { center: [cLon, cLat], zoom: 14, duration: 400 };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const target = focus === "target" ? COORDS[targetIndex] : undefined;
+    return target
+      ? { center: target, zoom: 16, duration: 400 }
+      : { center: routeCenter(), zoom: 14, duration: 400 };
   }, [focus, targetIndex]);
 
   return (
@@ -71,7 +67,7 @@ function YandexRouteMap({ kit, me, targetIndex, done, focus }: Props & { kit: YM
         <YMapDefaultSchemeLayer />
         <YMapDefaultFeaturesLayer />
         <YMapFeature
-          geometry={{ type: "LineString", coordinates: line }}
+          geometry={{ type: "LineString", coordinates: COORDS }}
           style={{ stroke: [{ color: "#0A5C49", width: 4, dash: [8, 8] }] }}
         />
         {me && (
@@ -80,7 +76,7 @@ function YandexRouteMap({ kit, me, targetIndex, done, focus }: Props & { kit: YM
           </YMapMarker>
         )}
         {STOPS.map((s, i) => (
-          <YMapMarker key={s.id} coordinates={[coords[i][1], coords[i][0]]}>
+          <YMapMarker key={s.id} coordinates={COORDS[i]}>
             <Pin number={s.id} state={markerState(i, targetIndex, done)} />
           </YMapMarker>
         ))}

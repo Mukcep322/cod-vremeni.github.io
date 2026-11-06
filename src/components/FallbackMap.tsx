@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { STOPS, stopCoords } from "../data/stops";
-import type { Position } from "../hooks/useGeolocation";
-import { markerState } from "../lib/markers";
+import { markerState, type MapProps } from "../lib/markers";
 import { MeMarker, Pin } from "./MapMarkers";
 import grid from "../assets/map-grid.svg";
 import river from "../assets/map-river.svg";
@@ -9,13 +8,7 @@ import parks from "../assets/map-parks.svg";
 import streets from "../assets/map-streets.svg";
 import route from "../assets/map-route.svg";
 
-type Props = {
-  me?: Position | null;
-  targetIndex: number;
-  done: number[];
-  focus: "route" | "target";
-  note: string;
-};
+type Props = MapProps & { note: string };
 
 // Схема из макета «Квест / Карта маршрута»: 390 × 423, не в масштабе
 const W = 390;

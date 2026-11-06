@@ -1,7 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // Компоненты JS API 3.0 приходят из скрипта Яндекса во время работы,
 // поэтому здесь они типизированы как any. Для строгих типов можно
 // поставить пакет @yandex/ymaps3-types (см. README).

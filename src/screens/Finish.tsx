@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { dataClass, FINAL_FACT, STOPS } from "../data/stops";
-import { ROUTE_KM } from "../lib/geo";
+import { FINAL_FACT, STOPS } from "../data/stops";
+import { ROUTE_LENGTH } from "../lib/geo";
 import { useProgress } from "../state/progress";
 import { Button, Chip } from "../components/ui";
 import iconStar from "../assets/icon-star.svg";
 
-// Фото для шапки финала. Положите файл в public/photos/ и впишите путь.
+// Фото для шапки финала, файл лежит в public/photos/
 const FINAL_PHOTO = "photos/final.webp";
 
 function duration(ms: number) {
@@ -49,13 +49,7 @@ export function Finish() {
       </h1>
       <div className="mineral-text">Площадь Героев · Вечный огонь</div>
 
-      {FINAL_PHOTO ? (
-        <img className="final-photo" src={FINAL_PHOTO} alt="Площадь Героев, Вечный огонь" />
-      ) : (
-        <div className="final-photo final-photo--empty" role="img" aria-label="Фото будет добавлено">
-          <span className="final-photo__tag">ФОТО · ЗАГЛУШКА</span>
-        </div>
-      )}
+      <img className="final-photo" src={FINAL_PHOTO} alt="Площадь Героев, Вечный огонь" />
 
       <div className="stats">
         <div className="stat">
@@ -65,7 +59,7 @@ export function Finish() {
           <span>остановок</span>
         </div>
         <div className="stat">
-          <b>{ROUTE_KM.toFixed(1).replace(".", ",")} км</b>
+          <b>{ROUTE_LENGTH}</b>
           <span>пешком</span>
         </div>
         <div className="stat">
@@ -93,7 +87,7 @@ export function Finish() {
         <div className="name-card__note">Сохраняется только на этом телефоне</div>
       </div>
 
-      <p className={dataClass(FINAL_FACT, "body")}>{FINAL_FACT}</p>
+      <p className="body">{FINAL_FACT}</p>
 
       <div className="sources">
         <div className="sources__title">Источники</div>

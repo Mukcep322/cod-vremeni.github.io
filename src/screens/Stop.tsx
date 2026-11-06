@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { dataClass, isNoData, STOPS } from "../data/stops";
-import { normalizeAnswer } from "../lib/geo";
+import { STOPS } from "../data/stops";
 import { useProgress } from "../state/progress";
 import { CompareSlider } from "../components/CompareSlider";
 import { AudioPlayer } from "../components/AudioPlayer";
+import { TaskForm } from "../components/TaskForm";
 import { Button, Chip, Header } from "../components/ui";
 import iconArchive from "../assets/icon-archive.svg";
 import iconCompass from "../assets/icon-compass.svg";
@@ -12,17 +12,12 @@ import iconKeyhole from "../assets/icon-keyhole.svg";
 import iconPin from "../assets/icon-pin.svg";
 import iconQuestion from "../assets/icon-question.svg";
 
-const MAX_ATTEMPTS = 3;
-
 export function Stop() {
   const { id } = useParams();
   const stop = STOPS.find((s) => String(s.id) === id);
   const { progress, dispatch } = useProgress();
   const navigate = useNavigate();
   const [storyId, setStoryId] = useState(stop?.stories[0].id ?? "");
-  const [answer, setAnswer] = useState("");
-  const [wrong, setWrong] = useState(false);
-  const [hintOpen, setHintOpen] = useState(false);
   const taskRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -30,13 +25,9 @@ export function Stop() {
   }, [stop, storyId, dispatch]);
 
   useEffect(() => {
-    // при переходе на другую остановку сбрасываем вкладку и поле ответа
+    // при переходе на другую остановку возвращаемся к первой вкладке и началу страницы
     setStoryId(stop?.stories[0].id ?? "");
-    setAnswer("");
-    setWrong(false);
-    setHintOpen(false);
     window.scrollTo(0, 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   if (!stop) return <Navigate to="/walk" replace />;
@@ -55,28 +46,6 @@ export function Stop() {
   const complete = () => {
     dispatch({ type: "complete", stopId: stop.id });
     navigate(`/stop/${stop.id}/done`);
-  };
-
-  const check = (e: FormEvent) => {
-    e.preventDefault();
-    if (!answer.trim()) return;
-    const { answers, mustContain, tolerance } = stop.task;
-    const given = normalizeAnswer(answer);
-    let ok: boolean;
-    if (tolerance !== undefined) {
-      const found = answer.match(/\d+(?:[.,]\d+)?/);
-      ok = !!found && Math.abs(Number(found[0].replace(",", ".")) - Number(answers[0])) <= tolerance;
-    } else {
-      ok =
-        answers.some((a) => normalizeAnswer(a) === given) ||
-        (!!mustContain?.length && mustContain.every((part) => given.includes(normalizeAnswer(part))));
-    }
-    if (ok) {
-      complete();
-    } else {
-      dispatch({ type: "wrong", stopId: stop.id });
-      setWrong(true);
-    }
   };
 
   return (
@@ -124,21 +93,17 @@ export function Stop() {
 
         <AudioPlayer src={story.audio} title="Слушать легенду" duration={story.audioDuration} />
 
-        {isNoData(story.legend) ? (
-          <p className="missing">{story.legend}</p>
-        ) : (
-          story.legend && (
-            <details className="legend">
-              <summary>
-                ТЕКСТ АУДИОЛЕГЕНДЫ
-                <span className="legend__sign" aria-hidden />
-              </summary>
-              <p className="text-small">{story.legend}</p>
-            </details>
-          )
+        {story.legend && (
+          <details className="legend">
+            <summary>
+              ТЕКСТ АУДИОЛЕГЕНДЫ
+              <span className="legend__sign" aria-hidden />
+            </summary>
+            <p className="text-small">{story.legend}</p>
+          </details>
         )}
 
-        <p className={dataClass(story.text, "body")}>{story.text}</p>
+        <p className="body">{story.text}</p>
 
         {multi && !allViewed && unseen && (
           <div className="info">
@@ -173,56 +138,14 @@ export function Stop() {
             </>
           ) : closed ? (
             <p className="text-small">Откройте обе истории остановки, чтобы перейти к заданию.</p>
-          ) : attempts >= MAX_ATTEMPTS ? (
-            <>
-              <p className={dataClass(stop.task.question, "task__q")}>{stop.task.question}</p>
-              <div className="answer-box">
-                <div className="label-xs">Правильный ответ · после {MAX_ATTEMPTS} попыток</div>
-                <div className="answer-box__text">{stop.task.answers[0]}</div>
-              </div>
-              <Button variant="secondary" onClick={complete}>
-                Идти дальше
-              </Button>
-            </>
           ) : (
-            <form onSubmit={check} className="stack">
-              <label htmlFor="answer" className={dataClass(stop.task.question, "task__q")}>
-                {stop.task.question}
-              </label>
-              <input
-                id="answer"
-                className={`input ${wrong ? "input--error" : ""}`}
-                value={answer}
-                onChange={(e) => {
-                  setAnswer(e.target.value);
-                  setWrong(false);
-                }}
-                placeholder="Ваш ответ"
-                autoComplete="off"
-                inputMode={stop.task.numeric ? "numeric" : undefined}
-                enterKeyHint="done"
-              />
-              {wrong && <div className="error">Не совсем. Попробуйте ещё раз.</div>}
-              {(hintOpen || attempts > 0) &&
-                (isNoData(stop.task.hint) ? (
-                  <div className="missing">{stop.task.hint}</div>
-                ) : (
-                  <div className="hint-box">
-                    <div className="label-xs">Подсказка</div>
-                    <div className="text-small">{stop.task.hint}</div>
-                    {/* ВРЕМЕННО: ответ виден всем, убрать перед запуском */}
-                    <div className="text-small">Ответ: {stop.task.answers[0]}</div>
-                  </div>
-                ))}
-              <Button type="submit" disabled={!answer.trim()}>
-                Проверить
-              </Button>
-              {attempts === 0 && !hintOpen && (
-                <button type="button" className="link" onClick={() => setHintOpen(true)}>
-                  Подсказка
-                </button>
-              )}
-            </form>
+            <TaskForm
+              key={stop.id}
+              task={stop.task}
+              attempts={attempts}
+              onCorrect={complete}
+              onWrong={() => dispatch({ type: "wrong", stopId: stop.id })}
+            />
           )}
         </div>
 

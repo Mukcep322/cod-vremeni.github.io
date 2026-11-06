@@ -24,23 +24,12 @@ export function formatDistance(meters: number): string {
   return `${(meters / 1000).toFixed(1).replace(".", ",")} км`;
 }
 
-/** Длина маршрута по прямой между остановками, км */
-export const ROUTE_KM = (() => {
-  let m = 0;
-  for (let i = 0; i < STOPS.length - 1; i++) m += distanceM(stopCoords(STOPS[i]), stopCoords(STOPS[i + 1]));
-  return m / 1000;
-})();
+/** Длина маршрута по прямой между остановками, подпись вида «2,6 км» */
+export const ROUTE_LENGTH = formatDistance(
+  STOPS.slice(1).reduce((sum, stop, i) => sum + distanceM(stopCoords(STOPS[i]), stopCoords(stop)), 0),
+);
 
 /** Ссылка на пешеходный маршрут в Яндекс.Картах от текущего места до точки */
 export function yandexWalkUrl(to: [number, number]): string {
   return `https://yandex.ru/maps/?rtext=~${to[0]},${to[1]}&rtt=pd`;
-}
-
-/** Нормализация ответа: регистр, ё/е, пробелы и знаки препинания */
-export function normalizeAnswer(s: string): string {
-  return s
-    .toLowerCase()
-    .replace(/ё/g, "е")
-    .replace(/[\s.,!?;:«»"'()№–—-]+/g, "")
-    .trim();
 }

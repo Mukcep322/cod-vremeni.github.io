@@ -1,5 +1,6 @@
 import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { dataClass, isNoData, STOPS, stopCoords } from "../data/stops";
+import { STOPS, stopCoords } from "../data/stops";
+import { displayAnswer } from "../lib/answers";
 import { distanceM, formatDistance, walkMinutes } from "../lib/geo";
 import { useProgress } from "../state/progress";
 import { Button, Chip, Segments } from "../components/ui";
@@ -16,9 +17,7 @@ export function Done() {
   const next = STOPS[index + 1];
   const toNext = next ? distanceM(stopCoords(stop), stopCoords(next)) : 0;
 
-  const { answers, question, reward } = stop.task;
-  const answer = isNoData(question) ? "" : answers[0];
-  const showReward = reward !== answer;
+  const { reward } = stop.task;
 
   return (
     <div className="screen screen--done">
@@ -35,9 +34,9 @@ export function Done() {
 
       <div className="answer-card">
         <div className="label">Ответ</div>
-        {answer && <p className="answer-card__title">{answer}</p>}
-        {answer && showReward && <div className="answer-card__rule" />}
-        {showReward && <p className={dataClass(reward, "text-small")}>{reward}</p>}
+        <p className="answer-card__title">{displayAnswer(stop.task)}</p>
+        <div className="answer-card__rule" />
+        <p className="text-small">{reward}</p>
       </div>
 
       {next && !progress.finishedAt && (

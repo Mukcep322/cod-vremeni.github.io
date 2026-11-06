@@ -3,14 +3,14 @@ import knob from "../assets/slider-knob.svg";
 
 type Props = { then: string; now: string; alt: string; year: string };
 
-/** Шторка «Было / Стало». Пустой путь — фирменная заглушка со штриховкой. */
+/** Шторка «Было / Стало». Пустой путь или файл, который не загрузился, — заглушка со штриховкой */
 export function CompareSlider({ then, now, alt, year }: Props) {
   const [pos, setPos] = useState(50);
   return (
     <div className="compare">
-      <Picture src={then} alt={`${alt}: архивное фото`} caption="Архивное фото" side="then" />
+      <Picture key={then} src={then} alt={`${alt}: архивное фото`} caption="Архивное фото" side="then" />
       <div className="compare__now" style={{ clipPath: `inset(0 0 0 ${pos}%)` }}>
-        <Picture src={now} alt={`${alt}: сейчас`} caption="Фото сейчас" side="now" />
+        <Picture key={now} src={now} alt={`${alt}: сейчас`} caption="Фото сейчас" side="now" />
       </div>
       <div className="compare__divider" style={{ left: `${pos}%` }} aria-hidden>
         <div className="compare__handle">
@@ -34,7 +34,8 @@ export function CompareSlider({ then, now, alt, year }: Props) {
 }
 
 function Picture({ src, alt, caption, side }: { src: string; alt: string; caption: string; side: "then" | "now" }) {
-  if (!src) {
+  const [broken, setBroken] = useState(false);
+  if (!src || broken) {
     return (
       <div className={`picture picture--${side}`} role="img" aria-label={`${caption}: будет добавлено`}>
         <span className="picture__caption">
@@ -45,5 +46,5 @@ function Picture({ src, alt, caption, side }: { src: string; alt: string; captio
       </div>
     );
   }
-  return <img className="picture" src={src} alt={alt} loading="lazy" />;
+  return <img className="picture" src={src} alt={alt} loading="lazy" onError={() => setBroken(true)} />;
 }

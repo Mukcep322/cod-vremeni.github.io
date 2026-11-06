@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { dataClass, INTRO, STOPS } from "../data/stops";
-import { ROUTE_KM } from "../lib/geo";
+import { INTRO, STOPS } from "../data/stops";
+import { ROUTE_LENGTH } from "../lib/geo";
 import { useProgress } from "../state/progress";
 import { RouteMap } from "../components/RouteMap";
 import { Button, Chip, Header, Segments } from "../components/ui";
@@ -105,7 +105,7 @@ export function Start() {
             <span>остановок</span>
           </div>
           <div className="route-card__stat">
-            <b>{ROUTE_KM.toFixed(1).replace(".", ",")} км</b>
+            <b>{ROUTE_LENGTH}</b>
             <span>пешком</span>
           </div>
           <div className="route-card__stat">
@@ -114,7 +114,7 @@ export function Start() {
           </div>
         </div>
         <div className="route-card__body">
-          <p className={dataClass(INTRO, "text-small")}>{INTRO}</p>
+          <p className="text-small">{INTRO}</p>
           <Button onClick={begin}>Начать маршрут</Button>
         </div>
       </section>
