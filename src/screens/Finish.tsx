@@ -7,7 +7,7 @@ import { Button, Chip } from "../components/ui";
 import iconStar from "../assets/icon-star.svg";
 
 // Фото для шапки финала. Положите файл в public/photos/ и впишите путь.
-const FINAL_PHOTO = "";
+const FINAL_PHOTO = "photos/final.webp";
 
 function duration(ms: number) {
   const min = Math.max(1, Math.round(ms / 60000));

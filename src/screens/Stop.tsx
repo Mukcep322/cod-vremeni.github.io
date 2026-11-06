@@ -210,6 +210,8 @@ export function Stop() {
                   <div className="hint-box">
                     <div className="label-xs">Подсказка</div>
                     <div className="text-small">{stop.task.hint}</div>
+                    {/* Только для разработки: в сборку для сайта не попадает */}
+                    {import.meta.env.DEV && <div className="text-small">Ответ: {stop.task.answers[0]}</div>}
                   </div>
                 ))}
               <Button type="submit" disabled={!answer.trim()}>
