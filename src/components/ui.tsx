@@ -69,7 +69,7 @@ export function Header({ number, back }: { number: number; back?: boolean }) {
           <img src={headerMark} width={26} height={26} alt="" />
         )}
       </div>
-      <span className="header__title">Улицы в военное время</span>
+      <span className="header__title">Маршрут Победы</span>
       <div className="header__side header__side--right">
         <span className="header__counter">
           {Math.min(number, STOPS.length)} / {STOPS.length}

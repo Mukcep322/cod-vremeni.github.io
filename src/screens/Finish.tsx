@@ -26,7 +26,7 @@ export function Finish() {
 
   const share = async () => {
     const url = window.location.href.split("#")[0];
-    const data = { title: "Улицы в военное время", text: "Пеший маршрут по Липецку 1941–1945", url };
+    const data = { title: "Маршрут Победы", text: "Пеший маршрут по Липецку 1941–1945", url };
     try {
       if (navigator.share) {
         await navigator.share(data);

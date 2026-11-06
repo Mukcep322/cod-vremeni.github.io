@@ -82,10 +82,9 @@ export function Start() {
       <div className="rule" />
       <Chip>Виток II · 1941–1945</Chip>
       <h1 className="hero">
-        Улицы
-        <br />в военное
+        Маршрут
         <br />
-        время
+        Победы
       </h1>
       <section className="route-card">
         <div className="route-card__head">
