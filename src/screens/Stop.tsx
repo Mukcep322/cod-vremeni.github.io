@@ -60,10 +60,17 @@ export function Stop() {
   const check = (e: FormEvent) => {
     e.preventDefault();
     if (!answer.trim()) return;
+    const { answers, mustContain, tolerance } = stop.task;
     const given = normalizeAnswer(answer);
-    const ok =
-      stop.task.answers.some((a) => normalizeAnswer(a) === given) ||
-      (!!stop.task.mustContain?.length && stop.task.mustContain.every((part) => given.includes(normalizeAnswer(part))));
+    let ok: boolean;
+    if (tolerance !== undefined) {
+      const found = answer.match(/\d+(?:[.,]\d+)?/);
+      ok = !!found && Math.abs(Number(found[0].replace(",", ".")) - Number(answers[0])) <= tolerance;
+    } else {
+      ok =
+        answers.some((a) => normalizeAnswer(a) === given) ||
+        (!!mustContain?.length && mustContain.every((part) => given.includes(normalizeAnswer(part))));
+    }
     if (ok) {
       complete();
     } else {
@@ -192,6 +199,7 @@ export function Stop() {
                 }}
                 placeholder="Ваш ответ"
                 autoComplete="off"
+                inputMode={stop.task.numeric ? "numeric" : undefined}
                 enterKeyHint="done"
               />
               {wrong && <div className="error">Не совсем. Попробуйте ещё раз.</div>}
